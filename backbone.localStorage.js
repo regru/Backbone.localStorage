@@ -57,27 +57,27 @@ _.extend(Backbone.LocalStorage.prototype, {
   // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
   // have an id of it's own.
   create: function(model) {
-    if (!model.id) {
-      model.id = guid();
-      model.set(model.idAttribute, model.id);
+    if (!model.options.LSid) {
+      model.options.LSid = guid();
+      // model.set(model.idAttribute, model.id);
     }
-    this.localStorage().setItem(this.name+"-"+model.id, JSON.stringify(model));
-    this.records.push(model.id.toString());
+    this.localStorage().setItem(this.name+"-"+model.options.LSid, JSON.stringify(model));
+    this.records.push(model.options.LSid.toString());
     this.save();
     return this.find(model);
   },
 
   // Update a model by replacing its copy in `this.data`.
   update: function(model) {
-    this.localStorage().setItem(this.name+"-"+model.id, JSON.stringify(model));
-    if (!_.include(this.records, model.id.toString()))
-      this.records.push(model.id.toString()); this.save();
+    this.localStorage().setItem(this.name+"-"+model.options.LSid, JSON.stringify(model));
+    if (!_.include(this.records, model.options.LSid.toString()))
+      this.records.push(model.options.LSid.toString()); this.save();
     return this.find(model);
   },
 
   // Retrieve a model from `this.data` by id.
   find: function(model) {
-    return this.jsonData(this.localStorage().getItem(this.name+"-"+model.id));
+    return this.jsonData(this.localStorage().getItem(this.name+"-"+model.options.LSid));
   },
 
   // Return the array of all models currently in storage.
@@ -93,11 +93,11 @@ _.extend(Backbone.LocalStorage.prototype, {
 
   // Delete a model from `this.data`, returning it.
   destroy: function(model) {
-    if (model.isNew())
+    if ( !model.options.LSid )
       return false
-    this.localStorage().removeItem(this.name+"-"+model.id);
+    this.localStorage().removeItem(this.name+"-"+model.options.LSid);
     this.records = _.reject(this.records, function(id){
-      return id === model.id.toString();
+      return id === model.options.LSid.toString();
     });
     this.save();
     return model;
@@ -150,7 +150,7 @@ Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(m
 
     switch (method) {
       case "read":
-        resp = model.id != undefined ? store.find(model) : store.findAll();
+        resp = model.options.LSid != undefined ? store.find(model) : store.findAll();
         break;
       case "create":
         resp = store.create(model);
@@ -181,6 +181,7 @@ Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(m
     if (syncDfd) {
       syncDfd.resolve(resp);
     }
+
     model.trigger('sync:' + method, model, resp, options);
 
   } else {
