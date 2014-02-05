@@ -181,6 +181,7 @@ Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(m
     if (syncDfd) {
       syncDfd.resolve(resp);
     }
+    model.trigger('sync:' + method, model, resp, options);
 
   } else {
     errorMessage = errorMessage ? errorMessage
